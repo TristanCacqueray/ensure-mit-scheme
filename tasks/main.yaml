@@ -1,0 +1,9 @@
+---
+- name: Check mit-scheme is installed
+  command: mit-scheme --version
+  failed_when: false
+  register: _mit_scheme
+
+- name: Install mit-scheme
+  include_tasks: install.yaml
+  when: _mit_scheme.rc != 0

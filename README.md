@@ -1,2 +1,7 @@
 # ensure-mit-scheme
-An Ansible role to install mit-scheme
+
+This role ensure mit-scheme is installed:
+
+```bash
+ansible-playbook install.yaml
+```

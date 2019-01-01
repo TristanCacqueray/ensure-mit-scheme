@@ -1,0 +1,65 @@
+- name: Install build requirements
+  package:
+    name:
+      - make
+      - gcc
+      - ncurses-devel
+      - libX11-devel
+  become: yes
+
+- name: Fetch
+  get_url:
+    url: "{{ mit_scheme_url }}"
+    dest: "./mit-scheme-{{ mit_scheme_version }}-{{ mit_scheme_arch }}.tar.gz"
+    checksum: "{{ mit_scheme_checksum }}"
+
+- name: Extract
+  command: "tar xzf mit-scheme-{{ mit_scheme_version }}-{{ mit_scheme_arch }}.tar.gz"
+  args:
+    creates: "mit-scheme-{{ mit_scheme_version }}"
+
+- name: Build
+  command: "{{ item }}"
+  args:
+    chdir: "mit-scheme-{{ mit_scheme_version }}/src"
+  with_items:
+    - ./configure
+    - make
+
+- name: Install
+  command: "make install"
+  args:
+    chdir: "mit-scheme-{{ mit_scheme_version }}/src"
+  become: yes
+
+- name: Ensure doc
+  block:
+    - name: Install doc build requirements
+      package:
+        name:
+          - texinfo
+          - texinfo-tex
+      become: yes
+
+    - name: Build doc
+      command: "{{ item }}"
+      args:
+        chdir: "mit-scheme-{{ mit_scheme_version }}/doc"
+      with_items:
+        - ./configure
+        - make
+
+    - name: Install doc
+      command: "make install-info install-html install-pdf"
+      args:
+        chdir: "mit-scheme-{{ mit_scheme_version }}/doc"
+      become: yes
+  when: mit_scheme_doc
+
+- name: Cleanup left over
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - mit-scheme-{{ mit_scheme_version }}
+    - mit-scheme-{{ mit_scheme_version }}-{{ mit_scheme_arch }}.tar.gz
